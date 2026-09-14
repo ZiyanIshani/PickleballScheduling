@@ -7,7 +7,7 @@ import type { SignalType } from "@/lib/types";
 
 export type SlotCell = {
   count: number;
-  entries: { name: string; signalType: SignalType }[];
+  entries: { name: string; signalType: SignalType; duprRating: number | null }[];
 };
 
 type Props = {
@@ -79,13 +79,20 @@ export function AggregatedGrid({ dates, dayData }: Props) {
           </div>
           <ul className="flex flex-col gap-1">
             {selectedCell.entries.map((entry, i) => (
-              <li key={i} className="flex items-center justify-between">
-                <span className="text-neutral-800">{entry.name}</span>
+              <li key={i} className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-neutral-800">
+                  {entry.name}
+                  {entry.duprRating != null && (
+                    <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs font-medium text-neutral-500">
+                      DUPR {entry.duprRating}
+                    </span>
+                  )}
+                </span>
                 <span
                   className={
                     entry.signalType === "going"
-                      ? "rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800"
-                      : "rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600"
+                      ? "shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800"
+                      : "shrink-0 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600"
                   }
                 >
                   {entry.signalType === "going" ? "Going for sure" : "Thinking about it"}

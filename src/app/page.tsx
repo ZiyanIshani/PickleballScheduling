@@ -25,7 +25,7 @@ export default async function CourtViewPage() {
 
   const { data: rows, error } = await supabase
     .from("availability")
-    .select("id,user_id,date,start_time,end_time,signal_type,profiles(id,name)")
+    .select("id,user_id,date,start_time,end_time,signal_type,profiles(id,name,dupr_rating)")
     .in("date", dates)
     .order("date")
     .order("start_time")
@@ -42,10 +42,11 @@ export default async function CourtViewPage() {
     const startIdx = timeToSlotIndex(row.start_time);
     const endIdx = timeToSlotIndex(row.end_time);
     const name = row.profiles?.name ?? "Someone";
+    const duprRating = row.profiles?.dupr_rating ?? null;
     for (let i = startIdx; i < endIdx; i++) {
       if (i < 0 || i >= cells.length) continue;
       cells[i].count += 1;
-      cells[i].entries.push({ name, signalType: row.signal_type });
+      cells[i].entries.push({ name, signalType: row.signal_type, duprRating });
     }
   }
 

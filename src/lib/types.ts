@@ -25,5 +25,5 @@ export type Availability = {
 };
 
 export type AvailabilityWithProfile = Availability & {
-  profiles: Pick<Profile, "id" | "name"> | null;
+  profiles: Pick<Profile, "id" | "name" | "dupr_rating"> | null;
 };
