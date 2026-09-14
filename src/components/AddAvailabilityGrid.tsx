@@ -70,7 +70,11 @@ export function AddAvailabilityGrid({ onChange }: Props) {
       <div className="flex items-center justify-between text-xs text-neutral-500">
         <span>Drag across the times you&apos;re considering.</span>
         {range && (
-          <button type="button" onClick={clearSelection} className="underline">
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="underline hover:text-neutral-700"
+          >
             Clear
           </button>
         )}
@@ -90,7 +94,7 @@ export function AddAvailabilityGrid({ onChange }: Props) {
             <div
               key={slotIndex}
               data-slot-index={slotIndex}
-              className={`flex h-8 items-center border-t border-neutral-100 pl-3 text-xs ${
+              className={`flex h-8 items-center border-t border-neutral-100 pl-3 text-xs transition-colors ${
                 isSelected ? "bg-emerald-500 text-white" : "bg-white text-neutral-400"
               }`}
             >

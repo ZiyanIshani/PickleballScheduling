@@ -17,9 +17,11 @@ type Props = {
 
 function intensityClass(count: number) {
   if (count === 0) return "bg-neutral-50";
-  if (count === 1) return "bg-emerald-200";
-  if (count === 2) return "bg-emerald-400";
-  return "bg-emerald-600";
+  if (count < 5) return "bg-emerald-100";
+  if (count < 10) return "bg-emerald-200";
+  if (count < 15) return "bg-emerald-400";
+  if (count < 20) return "bg-emerald-600";
+  return "bg-emerald-800";
 }
 
 export function AggregatedGrid({ dates, dayData }: Props) {
@@ -103,20 +105,30 @@ export function AggregatedGrid({ dates, dayData }: Props) {
         </div>
       )}
 
-      <div className="flex items-center gap-4 text-xs text-neutral-500">
+      <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-500">
         <span className="flex items-center gap-1">
           <span className="inline-block h-3 w-3 rounded-sm bg-neutral-50 ring-1 ring-inset ring-neutral-200" />
           none
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-200" />1
+          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-100" />
+          1–4
         </span>
         <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-400" />2
+          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-200" />
+          5–9
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-400" />
+          10–14
         </span>
         <span className="flex items-center gap-1">
           <span className="inline-block h-3 w-3 rounded-sm bg-emerald-600" />
-          3+
+          15–19
+        </span>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-800" />
+          20+
         </span>
       </div>
     </div>
@@ -152,9 +164,11 @@ function GridRow({
             type="button"
             disabled={cell.count === 0}
             onClick={() => onSelect(isSelected ? null : { date, slot: slotIndex })}
-            className={`h-6 border-l border-t border-neutral-100 ${intensityClass(cell.count)} ${
-              isSelected ? "ring-2 ring-inset ring-emerald-800" : ""
-            } ${cell.count > 0 ? "cursor-pointer" : "cursor-default"}`}
+            className={`h-6 border-l border-t border-neutral-100 transition-colors ${intensityClass(
+              cell.count,
+            )} ${isSelected ? "ring-2 ring-inset ring-sky-500" : ""} ${
+              cell.count > 0 ? "cursor-pointer hover:brightness-95" : "cursor-default"
+            }`}
             aria-label={
               cell.count > 0
                 ? `${cell.count} people at ${formatSlotLabel(slotIndex)}`

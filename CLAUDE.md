@@ -1,157 +1,125 @@
-# North Hills Pickleball Availability — M0 Spec
+# North Hills Pickleball Availability — M0 Wrap-up / M1 Readiness Spec
 
-## Purpose
+## Status
 
-Prove the core mechanic works: users can signal when they're planning to
-play at North Hills Park, and see an aggregated view of who else might be
-there, without needing hard RSVPs or manual calendar upkeep.
+M0 is built and deployed to production:
+**https://pickleball-scheduling.vercel.app**
 
-M0 is not shown to the FB group yet — it's the internal build to validate
-the loop before seeding it with real regulars (M1) and launching publicly
-(M2).
+Repo: `ziyan10/pickleball-scheduling`, deployed via Vercel, backed by
+Supabase (project `tjyvpyuudcqrxyxlrhdl`).
 
-## Scope (M0 only)
+Core loop (signup → add availability via drag-to-select grid → see
+aggregated view) has been verified working end-to-end on desktop Chrome,
+including a fix for a real production bug (see below). Phone-browser
+verification has not yet been done.
 
-In scope:
+## Bug fixed this session
 
-- Single hardcoded court: North Hills Park
-- Account creation / login
-- Add availability (day + time block + soft/hard signal)
-- Rolling 7-day aggregated view
-- Automatic expiry of past days
+**Symptom**: "Minified React error #441" when submitting availability.
 
-Out of scope (explicitly deferred):
+**Root cause**: a server/client hydration mismatch (React error #418).
+Vercel's server runs in UTC; the browser runs in local time. Two places in
+`src/lib/dates.ts` — `getRollingWindowDates()` and `isToday()` — called
+bare `new Date()`, so server-rendered HTML and the client's hydrated
+render could disagree about what date "today" is (specifically during the
+hours when it's already tomorrow in UTC but still today in North Hills'
+local time). `formatDateLabel()` also used a locale-dependent
+`toLocaleDateString(undefined, …)` call, which can differ between server
+and client for the same reason. The mismatch caused React to discard and
+remount the date-driven tree, which is why the drag-to-select grid on
+`/add` became unreliable and submissions could surface as the generic,
+production-masked error #441.
 
-- Multiple courts / cities
-- DUPR verification/integration, or any skill-based matching logic
-- Push notifications or reminders
-- Social features beyond seeing names on a slot
-- Anything resembling a native mobile app (mobile web only)
+**Fix**: `src/lib/dates.ts` now computes "today" using a fixed IANA
+timezone (`America/New_York`, North Hills Park's timezone) via
+`Intl.DateTimeFormat`, and formats labels with an explicit `"en-US"`
+locale, so server and client always agree regardless of where each runs.
+(A `TZ` env var was tried first but Vercel rejects it as a reserved name —
+the code-level fix is arguably more correct anyway, since it doesn't
+depend on platform env var support.)
 
-## Data model
+Verified by reproducing the original error live on the production URL,
+then confirming after the fix that the console is clean and the full
+drag → select → submit → aggregated-view loop works.
 
-**User**
+## Spec/reality divergence: DUPR display
 
-- id
-- name (display name)
-- contact (email or phone — for account identity only, not shown publicly
-  unless the user chooses)
-- dupr_rating (optional, self-entered at signup — not verified in M0)
-- created_at
+The original M0 spec (`CLAUDE.md`) explicitly marks DUPR as **collected
+but not displayed or used** in M0 — stored at signup only, for future
+AI-matching use.
 
-**Court**
+This session, DUPR display was added to the aggregated view on direct
+request: clicking a time slot now shows each attendee's name, DUPR rating
+(if set), and signal type ("thinking" / "going"). Players without a rating
+simply show no badge — not an explicit design decision, just the default
+behavior.
 
-- id
-- name ("North Hills Park")
-- (no other fields needed yet — single hardcoded row is fine for M0)
+Changed files: `src/lib/types.ts` (added `dupr_rating` to the `profiles`
+pick), `src/app/page.tsx` (select `dupr_rating` in the availability
+query), `src/components/AggregatedGrid.tsx` (render a "DUPR X.X" badge
+next to the name when present).
 
-**Availability**
+Flagging this explicitly since it's a deliberate scope expansion beyond
+the original spec, not an oversight — worth deciding if it should be
+retroactively folded into the spec or left as a noted exception.
 
-- id
-- user_id (FK -> User)
-- court_id (FK -> Court, always North Hills for M0)
-- date (the specific calendar date, not a recurring rule)
-- start_time / end_time (the specific window the user highlighted — see
-  Time Grid below)
-- signal_type (enum: "thinking" | "going")
-- created_at
+## Outstanding items before showing this to real users (M1)
 
-No "recurring availability" concept in M0 — every entry is for one specific
-date. Recurring patterns can be a later convenience feature once the core
-loop is validated.
+1. **Clean up test data in Supabase.** ✅ Done (2026-09-14). The list
+   above was actually stale — the Auth Users table had 5 test accounts,
+   not the 3 originally documented (`aishani+m0test@hotmail.com`,
+   `aishani+m0test2@hotmail.com`, and one seeded with the misleadingly
+   real-looking display name "Sam Regular" at `aishani+m0test4@hotmail.com`,
+   in addition to the documented `smoketest` and `duprtest2` accounts).
+   `aishani+duprtest@hotmail.com` was confirmed never to have completed
+   signup, so there was nothing to delete for it. All 5 test accounts were
+   deleted via Supabase Dashboard → Authentication → Users (cascades to
+   their `profiles`/`availability` rows). Only `ziyanishani@gmail.com`
+   remains.
 
-## Time grid (LettuceMeet-style)
+2. **Confirm Supabase auth redirect URL allow-list.** ✅ Already done.
+   Checked Supabase → Authentication → URL Configuration — the production
+   URL `https://pickleball-scheduling.vercel.app` is already in the
+   Redirect URLs allow-list, along with the Vercel-generated preview URL
+   patterns. No action was needed.
 
-Broad blocks (e.g. a single "9am–4pm" midday block) hide exactly the
-information that matters — someone could highlight that block at 9am and
-someone else at 3pm and never actually overlap. Instead, use a
-fine-grained grid similar to LettuceMeet:
+3. **Do a real phone-browser pass.** Still outstanding. Automated
+   viewport-resize/emulation wasn't reliable in this session's browser
+   automation environment (`window.innerWidth` didn't track the
+   requested size), so this still needs a manual pass on an actual phone:
+   signup → drag-select availability → view aggregated grid.
 
-- Fixed daily range, e.g. 6am–9pm (adjustable later, but a bounded range
-  keeps the grid a reasonable size rather than covering all 24 hours).
-- Grid resolution: 30-minute slots. Hourly might be too coarse for a
-  single court where a couple hours' difference matters; 30 minutes
-  balances precision against too many tiny cells to tap through.
-- Users click/drag across contiguous slots to highlight the window they're
-  considering (e.g., dragging from 5:00pm to 6:30pm marks three 30-minute
-  slots in one motion) rather than tapping each slot individually.
-- The aggregated view overlays everyone's highlighted slots for that day,
-  so overlap is visually obvious — a 5:00-6:00pm stretch with several
-  people's highlights stacked reads immediately as "this is when people are
-  actually going," rather than a same-count-different-time false positive
-  in a broad block.
+4. **DUPR badge gating: keep as-is.** ✅ Decided (2026-09-14) — no badge
+   shown when `dupr_rating` is null. No code change needed.
 
-Same grid shape for weekdays and weekends in M0 — don't add
-day-of-week-specific ranges before seeing real usage; adjust once you see
-when people actually play.
+   4.5 **UI cleanup pass.** ✅ Done (2026-09-14). Kept the white/emerald
+   scheme; changes: switched `body` off the Arial fallback onto the
+   already-configured Geist font, hover/focus states added across nav
+   links, buttons, and form inputs, login/signup wrapped in a card layout,
+   friendlier empty state copy on the court view, and the aggregated grid's
+   density legend reworked (see below). Verified by running the app
+   locally end-to-end (signup → add availability → aggregated view) via
+   browser automation.
 
-## Core screens
+   Also reworked the aggregated-grid heat-map thresholds on request: was
+   0 / 1 / 2 / 3+ people, now 6 tiers — none, 1–4, 5–9, 10–14, 15–19, and
+   20+ (darkest) — so the grid has headroom to look meaningful once real
+   regulars are using it, not just 0-3 people. See `intensityClass()` in
+   `src/components/AggregatedGrid.tsx`.
 
-**1. Court view (home screen)**
+5. **Push to `origin/main`.** Done as part of this session's commit — see
+   git log.
 
-- 7 columns (today through today+6), always rolling — computed as
-  `today <= date <= today + 6`, recalculated on every page load. No batch
-  job, no "week reset" logic.
-- Each column shows the 30-minute grid for that day (6am–9pm).
-- Each slot is shaded/counted by how many people have a highlight covering
-  it, so overlapping windows visually stack into an obvious "hot" stretch
-  rather than being flattened into one same-count block.
-- Tapping/clicking a highlighted stretch expands to show who's signaled
-  and whether they're "thinking" or "going."
-- Days that have fully passed simply disappear from the view — no explicit
-  "expire" action needed, since the query itself excludes past dates.
+## Next steps (per the original M0 → M1 → M2 roadmap)
 
-**2. Add availability**
+Once items 1–5 above are resolved and M0 feels solid:
 
-- Pick a date (within the current rolling 7-day window), then click-and-
-  drag across the grid to highlight the contiguous window being
-  considered (e.g., 5:00–6:30pm in one motion, not slot-by-slot taps).
-- Choose signal type: "thinking about it" or "going for sure."
-- Submit — should be completable in a few seconds, no multi-step wizard.
-- A user can have multiple entries across different days/windows; adding a
-  new one shouldn't require removing old ones.
-
-**3. Auth**
-
-- Minimal — email/password or a magic link.
-- Signup includes an optional DUPR rating field (self-entered, not
-  verified against DUPR in M0 — just stored for now).
-- No social login or profile pictures needed yet.
-
-## Non-goals / guardrails for M0
-
-- Don't build a generic multi-court framework yet — hardcode North Hills.
-  Multi-court support is easy to add later once the single-court loop is
-  proven; building it generically now is speculative work.
-- Don't build recurring/repeating availability yet — one-off entries per
-  date are enough to test whether the core loop is useful.
-- Don't add notifications, reminders, or messaging — the whole point is a
-  glanceable aggregated view, not another communication channel.
-
-## Definition of done for M0
-
-- You can log in, add availability for a real upcoming day/block at North
-  Hills, and see it reflected (with your name) in the aggregated view.
-- The 7-day window correctly rolls forward day-to-day without any manual
-  intervention.
-- Past days disappear from the view automatically.
-- The app is deployed at a real, shareable URL (not localhost) and usable
-  on a phone browser.
-
-Once this is true, move to M1: seed real data yourself, recruit 5-10
-regulars directly, then prepare for the FB group launch (M2).
-
-## Future roadmap (explicitly post-M0)
-
-- DUPR is collected at signup now specifically so it's already in the data
-  model when this becomes relevant later — not used for anything in M0.
-- Longer-term direction: use stored DUPR ratings (and eventually court
-  data across multiple locations) to power AI-driven suggestions — e.g.,
-  recommending courts/times where players of a similar skill level are
-  likely to show up, or surfacing good match-ups among people who've
-  signaled for the same window.
-- None of this is built in M0 — it's noted here so the data model doesn't
-  need to be reworked later to support it.
+- **M1**: seed real data yourself (a few real upcoming plans so the
+  calendar isn't empty), then recruit 5–10 regulars you already play with
+  directly (text/DM, not a cold post) to get real usage going before the
+  wider announcement.
+- **M2**: post to the North Hills FB group with a pitch tied directly to
+  the group's actual coordination pain point.
 
 <!-- BEGIN:nextjs-agent-rules -->
 

@@ -71,9 +71,12 @@ export default async function CourtViewPage() {
         )}
 
         {totalSignals === 0 ? (
-          <div className="rounded-lg border border-dashed border-neutral-300 bg-white p-8 text-center text-sm text-neutral-500">
-            No one has signaled availability for the next 7 days yet. Be the first —
-            tap &ldquo;Add availability&rdquo; above.
+          <div className="rounded-lg border border-dashed border-neutral-300 bg-white p-10 text-center">
+            <p className="text-sm font-medium text-neutral-700">No one&apos;s signaled yet</p>
+            <p className="mt-1 text-sm text-neutral-500">
+              Be the first — tap &ldquo;Add availability&rdquo; above to let others know when
+              you&apos;re playing.
+            </p>
           </div>
         ) : (
           <AggregatedGrid dates={dates} dayData={dayData} />

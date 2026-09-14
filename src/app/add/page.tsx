@@ -44,7 +44,7 @@ export default function AddAvailabilityPage() {
     <div className="mx-auto flex max-w-md flex-col gap-5 px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-neutral-900">Add availability</h1>
-        <Link href="/" className="text-sm text-neutral-500 underline">
+        <Link href="/" className="text-sm text-neutral-500 underline hover:text-neutral-700">
           Cancel
         </Link>
       </div>
@@ -60,10 +60,10 @@ export default function AddAvailabilityPage() {
                 setDate(d);
                 setRange(null);
               }}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-sm ${
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors ${
                 date === d
                   ? "border-emerald-600 bg-emerald-600 text-white"
-                  : "border-neutral-300 text-neutral-700"
+                  : "border-neutral-300 text-neutral-700 hover:border-neutral-400"
               }`}
             >
               {isToday(d) ? "Today" : formatDateLabel(d)}
@@ -88,10 +88,10 @@ export default function AddAvailabilityPage() {
           <button
             type="button"
             onClick={() => setSignalType("thinking")}
-            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
               signalType === "thinking"
                 ? "border-neutral-800 bg-neutral-800 text-white"
-                : "border-neutral-300 text-neutral-700"
+                : "border-neutral-300 text-neutral-700 hover:border-neutral-400"
             }`}
           >
             Thinking about it
@@ -99,10 +99,10 @@ export default function AddAvailabilityPage() {
           <button
             type="button"
             onClick={() => setSignalType("going")}
-            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium ${
+            className={`flex-1 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
               signalType === "going"
                 ? "border-emerald-600 bg-emerald-600 text-white"
-                : "border-neutral-300 text-neutral-700"
+                : "border-neutral-300 text-neutral-700 hover:border-neutral-400"
             }`}
           >
             Going for sure
@@ -116,7 +116,7 @@ export default function AddAvailabilityPage() {
         type="button"
         onClick={handleSubmit}
         disabled={isPending}
-        className="rounded-md bg-emerald-600 px-4 py-2.5 font-medium text-white disabled:opacity-50"
+        className="rounded-md bg-emerald-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isPending ? "Saving…" : "Submit"}
       </button>
