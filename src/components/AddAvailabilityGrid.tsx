@@ -2,9 +2,13 @@
 
 import { useRef, useState } from "react";
 import { formatSlotLabel, SLOT_INDICES } from "@/lib/time-grid";
+import type { SignalType } from "@/lib/types";
+
+type ExistingRange = { start: number; end: number; signalType: SignalType };
 
 type Props = {
   onChange: (range: { start: number; end: number } | null) => void;
+  existingRanges?: ExistingRange[];
 };
 
 function slotIndexAtPoint(container: HTMLElement, x: number, y: number): number | null {
@@ -14,7 +18,7 @@ function slotIndexAtPoint(container: HTMLElement, x: number, y: number): number 
   return Number(slotEl.dataset.slotIndex);
 }
 
-export function AddAvailabilityGrid({ onChange }: Props) {
+export function AddAvailabilityGrid({ onChange, existingRanges = [] }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [anchor, setAnchor] = useState<number | null>(null);
   const [cursor, setCursor] = useState<number | null>(null);
@@ -68,7 +72,7 @@ export function AddAvailabilityGrid({ onChange }: Props) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between text-xs text-neutral-500">
-        <span>Drag across the times you&apos;re considering.</span>
+        <span>Drag across the times you&apos;re considering. Shaded rows are already saved.</span>
         {range && (
           <button
             type="button"
@@ -90,12 +94,20 @@ export function AddAvailabilityGrid({ onChange }: Props) {
         {SLOT_INDICES.map((slotIndex) => {
           const isHourMark = slotIndex % 2 === 0;
           const isSelected = range && slotIndex >= range.start && slotIndex <= range.end;
+          const existing = existingRanges.find(
+            (r) => slotIndex >= r.start && slotIndex <= r.end,
+          );
+          const baseClass = existing
+            ? existing.signalType === "going"
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-neutral-200 text-neutral-500"
+            : "bg-white text-neutral-400";
           return (
             <div
               key={slotIndex}
               data-slot-index={slotIndex}
               className={`flex h-8 items-center border-t border-neutral-100 pl-3 text-xs transition-colors ${
-                isSelected ? "bg-emerald-500 text-white" : "bg-white text-neutral-400"
+                isSelected ? "bg-emerald-500 text-white" : baseClass
               }`}
             >
               {isHourMark ? formatSlotLabel(slotIndex) : ""}

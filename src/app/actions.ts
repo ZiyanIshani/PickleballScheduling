@@ -91,12 +91,48 @@ export async function addAvailability(formData: FormData) {
   const start_time = slotIndexToTime(startIndex);
   const end_time = slotIndexToTime(endIndex + 1);
 
+  // A user can only have one signal per moment in time — merge this range
+  // with any of their own existing rows on this date that it overlaps,
+  // rather than inserting a second row that double-counts shared slots.
+  const { data: existing, error: existingError } = await supabase
+    .from("availability")
+    .select("id,start_time,end_time")
+    .eq("user_id", user.id)
+    .eq("date", date);
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+
+  const overlapping = (existing ?? []).filter(
+    (row) => row.start_time < end_time && row.end_time > start_time,
+  );
+
+  let mergedStart = start_time;
+  let mergedEnd = end_time;
+  for (const row of overlapping) {
+    if (row.start_time < mergedStart) mergedStart = row.start_time;
+    if (row.end_time > mergedEnd) mergedEnd = row.end_time;
+  }
+
+  if (overlapping.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("availability")
+      .delete()
+      .in(
+        "id",
+        overlapping.map((row) => row.id),
+      );
+    if (deleteError) {
+      throw new Error(deleteError.message);
+    }
+  }
+
   const { error } = await supabase.from("availability").insert({
     user_id: user.id,
     court_id: court.id,
     date,
-    start_time,
-    end_time,
+    start_time: mergedStart,
+    end_time: mergedEnd,
     signal_type: signalType,
   });
 
@@ -104,5 +140,34 @@ export async function addAvailability(formData: FormData) {
     throw new Error(error.message);
   }
 
-  redirect("/");
+  revalidatePath("/");
+  redirect(`/add?date=${date}`);
+}
+
+export async function deleteAvailability(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    throw new Error("Missing availability id.");
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { error } = await supabase
+    .from("availability")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/add");
 }

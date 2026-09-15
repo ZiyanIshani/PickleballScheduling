@@ -16,7 +16,7 @@ export function Nav({ userName }: { userName: string }) {
           href="/add"
           className="rounded-md bg-emerald-600 px-3 py-1.5 font-medium text-white transition-colors hover:bg-emerald-700"
         >
-          Add availability
+          Edit availability
         </Link>
         <Link
           href="/profile"
