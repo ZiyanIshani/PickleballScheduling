@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { addAvailability, deleteAvailability } from "@/app/actions";
 import { AddAvailabilityGrid } from "@/components/AddAvailabilityGrid";
 import { formatDateLabel, isToday } from "@/lib/dates";
@@ -23,11 +23,13 @@ type Props = {
 };
 
 export function EditAvailabilityClient({ dates, initialDate, initialRows }: Props) {
+  const router = useRouter();
   const [rows, setRows] = useState(initialRows);
   const [date, setDate] = useState(initialDate);
   const [range, setRange] = useState<{ start: number; end: number } | null>(null);
   const [signalType, setSignalType] = useState<SignalType>("thinking");
   const [error, setError] = useState<string | null>(null);
+  const [unsavedWarning, setUnsavedWarning] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -73,6 +75,14 @@ export function EditAvailabilityClient({ dates, initialDate, initialRows }: Prop
     });
   }
 
+  function handleDone() {
+    if (range) {
+      setUnsavedWarning(true);
+      return;
+    }
+    router.push("/");
+  }
+
   function handleRemove(id: string) {
     setError(null);
     setDeletingId(id);
@@ -95,10 +105,46 @@ export function EditAvailabilityClient({ dates, initialDate, initialRows }: Prop
     <div className="mx-auto flex max-w-md flex-col gap-5 px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-neutral-900">Edit availability</h1>
-        <Link href="/" className="text-sm text-neutral-500 underline hover:text-neutral-700">
+        <button
+          type="button"
+          onClick={handleDone}
+          className="text-sm text-neutral-500 underline hover:text-neutral-700"
+        >
           Done
-        </Link>
+        </button>
       </div>
+
+      {unsavedWarning && range && (
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+          <p className="mb-2">
+            You picked a time window but haven&apos;t saved it yet. Save it, or discard it to
+            leave without adding it.
+          </p>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setUnsavedWarning(false);
+                handleSubmit();
+              }}
+              className="font-medium underline hover:text-amber-900"
+            >
+              Save now
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setUnsavedWarning(false);
+                setRange(null);
+                router.push("/");
+              }}
+              className="font-medium underline hover:text-amber-900"
+            >
+              Discard and leave
+            </button>
+          </div>
+        </div>
+      )}
 
       <div>
         <p className="mb-2 text-sm font-medium text-neutral-700">Date</p>
