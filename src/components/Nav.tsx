@@ -18,7 +18,13 @@ export function Nav({ userName }: { userName: string }) {
         >
           Add availability
         </Link>
-        <span className="hidden text-neutral-500 sm:inline">{userName}</span>
+        <Link
+          href="/profile"
+          className="text-neutral-500 transition-colors hover:text-neutral-800"
+        >
+          <span className="hidden sm:inline">{userName}</span>
+          <span className="sm:hidden">Profile</span>
+        </Link>
         <form action={signOut}>
           <button
             type="submit"

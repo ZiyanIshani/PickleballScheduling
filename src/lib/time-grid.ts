@@ -1,6 +1,6 @@
-// Fixed daily grid: 6:00am to 9:00pm in 30-minute slots (see CLAUDE.md "Time grid").
+// Fixed daily grid: 6:00am to 10:00pm in 30-minute slots (see CLAUDE.md "Time grid").
 export const GRID_START_MINUTES = 6 * 60; // 6:00am
-export const GRID_END_MINUTES = 21 * 60; // 9:00pm
+export const GRID_END_MINUTES = 22 * 60; // 10:00pm
 export const SLOT_MINUTES = 30;
 export const SLOTS_PER_DAY = (GRID_END_MINUTES - GRID_START_MINUTES) / SLOT_MINUTES;
 

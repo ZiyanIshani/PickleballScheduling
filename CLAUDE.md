@@ -57,3 +57,18 @@ Last updated: 2026-09-14, based on session notes from 2026-09-13 and 2026-09-14.
 - CLAUDE.md is the source of truth for the M0/M1/M2 roadmap and "definition
   of done" checklists; this spec reflects where the M1 checklist stands as
   of 2026-09-14.
+
+  User Notes
+  1. I tried loading the website on my phone and it looks good/functions as expected
+  2. Add a way so users can edit their profiles. Specifically allow them to edit DUPR as its a dynamic rating and display name in case they want to be anonymous
+  3. Extend the scheduling hours to go until 10pm
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
