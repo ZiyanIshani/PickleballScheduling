@@ -105,6 +105,9 @@ export function AggregatedGrid({ dates, dayData }: Props) {
         </div>
       )}
 
+      <p className="text-xs text-neutral-500">
+        Darker cells mean more people have signaled availability for that time slot.
+      </p>
       <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-500">
         <span className="flex items-center gap-1">
           <span className="inline-block h-3 w-3 rounded-sm bg-neutral-50 ring-1 ring-inset ring-neutral-200" />
