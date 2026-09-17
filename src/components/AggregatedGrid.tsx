@@ -24,6 +24,15 @@ function intensityClass(count: number) {
   return "bg-emerald-800";
 }
 
+const LEGEND = [
+  { label: "none", className: "bg-neutral-50 ring-1 ring-inset ring-neutral-200" },
+  { label: "1–4", className: "bg-emerald-100" },
+  { label: "5–9", className: "bg-emerald-200" },
+  { label: "10–14", className: "bg-emerald-400" },
+  { label: "15–19", className: "bg-emerald-600" },
+  { label: "20+", className: "bg-emerald-800" },
+];
+
 export function AggregatedGrid({ dates, dayData }: Props) {
   const [selected, setSelected] = useState<{ date: string; slot: number } | null>(null);
 
@@ -32,7 +41,7 @@ export function AggregatedGrid({ dates, dayData }: Props) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="overflow-x-auto rounded-lg border border-neutral-200">
+      <div className="overflow-x-auto rounded-2xl border border-neutral-200 bg-white shadow-[var(--shadow-card)]">
         <div
           className="grid min-w-[640px]"
           style={{ gridTemplateColumns: `56px repeat(${dates.length}, minmax(72px, 1fr))` }}
@@ -41,7 +50,9 @@ export function AggregatedGrid({ dates, dayData }: Props) {
           {dates.map((date) => (
             <div
               key={date}
-              className="border-b border-l border-neutral-200 bg-white px-1 py-2 text-center text-xs font-medium text-neutral-700"
+              className={`border-b border-l border-neutral-200 px-1 py-2 text-center text-xs font-medium ${
+                isToday(date) ? "bg-emerald-50 text-emerald-700" : "bg-white text-neutral-700"
+              }`}
             >
               {isToday(date) ? "Today" : formatDateLabel(date)}
             </div>
@@ -65,21 +76,21 @@ export function AggregatedGrid({ dates, dayData }: Props) {
       </div>
 
       {selected && selectedCell && selectedCell.count > 0 && (
-        <div className="rounded-lg border border-neutral-200 bg-white p-3 text-sm shadow-sm">
-          <div className="mb-2 flex items-center justify-between">
+        <div className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm shadow-[var(--shadow-card)]">
+          <div className="mb-3 flex items-center justify-between">
             <p className="font-medium text-neutral-900">
               {isToday(selected.date) ? "Today" : formatDateLabel(selected.date)} ·{" "}
               {formatSlotLabel(selected.slot)}–{formatSlotLabel(selected.slot + 1)}
             </p>
             <button
               onClick={() => setSelected(null)}
-              className="text-xs text-neutral-400 hover:text-neutral-600"
+              className="rounded-full p-1 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
               aria-label="Close"
             >
               ✕
             </button>
           </div>
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col gap-2">
             {selectedCell.entries.map((entry, i) => (
               <li key={i} className="flex items-center justify-between gap-2">
                 <span className="flex items-center gap-1.5 text-neutral-800">
@@ -105,34 +116,18 @@ export function AggregatedGrid({ dates, dayData }: Props) {
         </div>
       )}
 
-      <p className="text-xs text-neutral-500">
-        Darker cells mean more people have signaled availability for that time slot.
-      </p>
-      <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-500">
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-neutral-50 ring-1 ring-inset ring-neutral-200" />
-          none
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-100" />
-          1–4
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-200" />
-          5–9
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-400" />
-          10–14
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-600" />
-          15–19
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="inline-block h-3 w-3 rounded-sm bg-emerald-800" />
-          20+
-        </span>
+      <div className="flex flex-col gap-2 rounded-xl border border-neutral-200/70 bg-white/60 px-3 py-2.5">
+        <p className="text-xs text-neutral-500">
+          Darker cells mean more people have signaled availability for that time slot.
+        </p>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500">
+          {LEGEND.map((item) => (
+            <span key={item.label} className="flex items-center gap-1.5">
+              <span className={`inline-block h-3 w-3 rounded-sm ${item.className}`} />
+              {item.label}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -167,10 +162,10 @@ function GridRow({
             type="button"
             disabled={cell.count === 0}
             onClick={() => onSelect(isSelected ? null : { date, slot: slotIndex })}
-            className={`h-6 border-l border-t border-neutral-100 transition-colors ${intensityClass(
+            className={`h-6 border-l border-t border-neutral-100 transition-all ${intensityClass(
               cell.count,
             )} ${isSelected ? "ring-2 ring-inset ring-sky-500" : ""} ${
-              cell.count > 0 ? "cursor-pointer hover:brightness-95" : "cursor-default"
+              cell.count > 0 ? "cursor-pointer hover:z-10 hover:brightness-95" : "cursor-default"
             }`}
             aria-label={
               cell.count > 0

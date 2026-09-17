@@ -55,25 +55,51 @@ export default async function CourtViewPage() {
   return (
     <div className="flex min-h-dvh flex-col bg-neutral-50">
       <Nav userName={profile?.name ?? user.email ?? ""} />
-      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-4 px-4 py-6">
-        <div>
-          <h1 className="text-lg font-semibold text-neutral-900">North Hills Park</h1>
-          <p className="text-sm text-neutral-500">
-            {isToday(dates[0]) ? "Today" : formatDateLabel(dates[0])} –{" "}
-            {formatDateLabel(dates[dates.length - 1])}
-          </p>
+      <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-5 px-4 py-6">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-neutral-900">
+              North Hills Park
+            </h1>
+            <p className="text-sm text-neutral-500">
+              {isToday(dates[0]) ? "Today" : formatDateLabel(dates[0])} –{" "}
+              {formatDateLabel(dates[dates.length - 1])}
+            </p>
+          </div>
+          {totalSignals > 0 && (
+            <p className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+              {totalSignals} signal{totalSignals === 1 ? "" : "s"} this week
+            </p>
+          )}
         </div>
 
         {error && (
-          <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+          <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
             Couldn&apos;t load availability: {error.message}
           </p>
         )}
 
         {totalSignals === 0 && (
-          <div className="rounded-lg border border-dashed border-neutral-300 bg-white p-4 text-center">
+          <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-neutral-300 bg-white px-4 py-8 text-center shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.008v.008H3.75V6.75Zm0 5.25h.008v.008H3.75V12Zm0 5.25h.008v.008H3.75v-5.25Z"
+                />
+              </svg>
+            </div>
             <p className="text-sm font-medium text-neutral-700">No one&apos;s signaled yet</p>
-            <p className="mt-1 text-sm text-neutral-500">
+            <p className="max-w-xs text-sm text-neutral-500">
               Be the first — tap &ldquo;Edit availability&rdquo; above to let others know when
               you&apos;re playing.
             </p>

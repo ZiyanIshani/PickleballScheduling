@@ -22,15 +22,19 @@ export default async function ProfilePage() {
     <div className="flex min-h-dvh flex-col bg-neutral-50">
       <Nav userName={profile?.name ?? user.email ?? ""} />
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col px-4 py-6">
-        <h1 className="mb-1 text-lg font-semibold text-neutral-900">Edit profile</h1>
+        <h1 className="mb-1 text-xl font-semibold tracking-tight text-neutral-900">
+          Edit profile
+        </h1>
         <p className="mb-6 text-sm text-neutral-500">
           Update your display name or DUPR rating. Others will see these on the aggregated
           schedule.
         </p>
-        <ProfileForm
-          initialName={profile?.name ?? ""}
-          initialDuprRating={profile?.dupr_rating ?? null}
-        />
+        <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-[var(--shadow-card)]">
+          <ProfileForm
+            initialName={profile?.name ?? ""}
+            initialDuprRating={profile?.dupr_rating ?? null}
+          />
+        </div>
       </main>
     </div>
   );

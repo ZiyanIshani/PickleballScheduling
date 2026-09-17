@@ -88,7 +88,7 @@ export function AddAvailabilityGrid({ onChange, existingRanges = [] }: Props) {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        className="select-none touch-none overflow-hidden rounded-lg border border-neutral-200"
+        className="select-none touch-none overflow-hidden rounded-xl border border-neutral-200"
         style={{ touchAction: "none" }}
       >
         {SLOT_INDICES.map((slotIndex) => {
@@ -99,14 +99,14 @@ export function AddAvailabilityGrid({ onChange, existingRanges = [] }: Props) {
           );
           const baseClass = existing
             ? existing.signalType === "going"
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-neutral-200 text-neutral-500"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-neutral-100 text-neutral-500"
             : "bg-white text-neutral-400";
           return (
             <div
               key={slotIndex}
               data-slot-index={slotIndex}
-              className={`flex h-8 items-center border-t border-neutral-100 pl-3 text-xs transition-colors ${
+              className={`flex h-8 items-center border-t border-neutral-100 pl-3 text-xs font-medium transition-colors ${
                 isSelected ? "bg-emerald-500 text-white" : baseClass
               }`}
             >
