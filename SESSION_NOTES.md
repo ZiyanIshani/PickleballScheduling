@@ -159,17 +159,172 @@ left for a future session to find.
 
 ## Suggested next steps before shipping v1 to the public
 
-1. **Do the real phone-browser pass** — signup → drag-select availability
-   → view aggregated grid — on an actual phone. This is the one item from
-   CLAUDE.md's M1 checklist that genuinely couldn't be verified this
-   session.
-2. **Confirm the live deploy** at
-   https://pickleball-scheduling.vercel.app reflects this session's
-   push — check that the new card-style auth pages and density legend
-   are showing up in production, not just locally.
+1. ~~**Do the real phone-browser pass**~~ — **done.** You tested on an
+   actual phone and confirmed the site loads and functions as expected.
+2. ~~**Confirm the live deploy**~~ — **done, see below.**
 3. **Seed real data (M1)** — add a few of your own real upcoming plans so
-   the calendar isn't empty when regulars first look at it.
+   the calendar isn't empty when regulars first look at it. This needs
+   your actual availability, so it wasn't something to fabricate here.
 4. **Recruit 5–10 regulars directly** (text/DM, not a cold post) to get
    real usage going before any public announcement.
 5. **M2 launch** — once M1 usage feels real, post to the North Hills FB
    group with a pitch tied to the group's actual coordination pain point.
+
+# Session notes — 2026-09-15
+
+Context for resuming: three asks came in via CLAUDE.md's "User Notes"
+(phone check, profile editing, extending scheduling hours to 10pm). This
+session's job was to check CLAUDE.md/SESSION_NOTES' outstanding items
+against the actual state of the repo before doing any new work — turned
+out an unlogged session on the evening of 2026-09-14 had already shipped
+most of it (commits `4d30a10`..`a986ea4`, pushed to `origin/main`, none of
+it written up in this file until now). This session verified that work is
+correct and complete rather than re-doing it, and closes the loop on
+documentation.
+
+## What was found already done (undocumented until now)
+
+1. **Profile editing (display name + DUPR)** — `4d30a10`. `/profile` page,
+   `ProfileForm.tsx`, and `updateProfile()` in `src/app/actions.ts` let a
+   user change their display name (for anonymity) and DUPR rating
+   (nullable, 1–8 range validated) at any time. Matches CLAUDE.md's ask
+   exactly.
+2. **Scheduling hours extended to 10pm** — also bundled into `4d30a10`.
+   `src/lib/time-grid.ts`'s `GRID_END_MINUTES` moved from `21 * 60` (9pm)
+   to `22 * 60` (10pm), so the last selectable slot is 9:30–10:00pm.
+3. **Double-counting fix** — `cf13db6` + `a986ea4`. Reworked
+   `addAvailability()` in `src/app/actions.ts` to merge a new
+   thinking/going submission against a user's *existing* rows for that
+   date via interval union/subtraction (`unionIntervals` /
+   `subtractIntervals`), instead of blindly inserting a new row that could
+   overlap and double-count an already-covered time range in the
+   aggregated view. "Going" always wins over "thinking" wherever the two
+   overlap. This also came with a new dedicated edit surface,
+   `EditAvailabilityClient.tsx` (list existing time blocks for the
+   selected day with per-block "Remove", plus an unsaved-selection guard
+   before navigating away).
+4. **Real phone-browser pass** — per your note, done directly on hardware:
+   "I tried loading the website on my phone and it looks good/functions
+   as expected." This was the one item every prior session flagged as
+   blocking and couldn't complete via automation — now closed.
+
+## What this session verified
+
+- `tsc --noEmit`, `eslint`, and `next build` all clean on the current
+  `main` (`a986ea4`).
+- Read through `actions.ts`'s interval-merging logic and
+  `EditAvailabilityClient.tsx` end to end — no half-finished branches,
+  validation on both signal type and date-window bounds looks correct.
+- Confirmed `git status` clean and `main` in sync with `origin/main` —
+  nothing local waiting to be pushed.
+- Fetched the live login page (`curl` on
+  `https://pickleball-scheduling.vercel.app/login`) and diffed its
+  rendered class names against the source: the card layout
+  (`rounded-xl border ... shadow-sm`), Geist font variables, and
+  hover/focus classes are all present — production is serving the latest
+  push, not a stale build. (Couldn't verify the authenticated
+  `/add`/`/profile` routes the same way without a login session — no
+  service-role key locally, per the standing constraint from prior
+  sessions — but Vercel auto-deploys on push to `main` and there's
+  nothing in the git history to suggest a deploy failure.)
+
+## Where things are left
+
+- **No code changes this session** — everything CLAUDE.md's user notes
+  asked for was already shipped and working; this was a verification +
+  documentation pass, not new implementation.
+- **Real Supabase data**: still just `ziyanishani@gmail.com`, no
+  availability rows. Seeding real plans is the next actual to-do and
+  needs your own schedule info, not something to script.
+- **No Supabase service-role key locally** — still true, still means
+  privileged DB work goes through the Supabase Dashboard in-browser.
+
+## Suggested next steps
+
+1. **Seed real data (M1)** — add a few of your own real upcoming plans on
+   `/add` so the calendar isn't empty when regulars first look at it.
+2. **Recruit 5–10 regulars directly** (text/DM, not a cold post) to get
+   real usage going before any public announcement.
+3. **M2 launch** — once M1 usage feels real, post to the North Hills FB
+   group with a pitch tied to the group's actual coordination pain point.
+4. Nothing outstanding on the code side right now — if you hit anything
+   odd while seeding real data or once regulars start using it (e.g. an
+   edge case in the double-counting merge, or a DUPR display quirk),
+   that's the next thing worth a session.
+
+# Session notes — 2026-09-16
+
+Context for resuming: three UX complaints came in directly in chat (not
+CLAUDE.md this time) about the logged-in landing screen and the `/add`
+page's button layout.
+
+## What was reported
+
+1. "When a user first logs into the app the screen that they land on is
+   kinda weird. I want them to first land on the calendar so they can see
+   how the app kinda works."
+2. On `/add`, the Done button was hard to find (a small underlined text
+   link up in the header, disconnected from the primary Save button at
+   the bottom). Wanted Save and Done next to each other, Save on the
+   left.
+3. Wanted a back arrow at the top of `/add` as another way to navigate
+   back.
+
+## Root cause for #1
+
+Login/signup/email-confirm all already redirected to `/`, and `/` already
+*is* the calendar (`AggregatedGrid`) — so routing was never the problem.
+The real bug: `src/app/page.tsx` only rendered `AggregatedGrid` when
+`totalSignals > 0`; with zero rows it swapped the entire grid out for a
+plain "No one's signaled yet" dashed box with no dates, no hours, nothing
+calendar-shaped. Any first-time user landing before real data existed
+(true for everyone until very recently, since Supabase was fully purged
+after M0 testing) saw a bare text box instead of a calendar — that's the
+"weird" landing screen.
+
+## Fixes made
+
+- **`src/app/page.tsx`**: `AggregatedGrid` now always renders. The
+  "No one's signaled yet" message is now a banner shown *above* the grid
+  (only when `totalSignals === 0`) instead of replacing it, so the
+  day/hour structure is visible immediately regardless of whether anyone
+  has signaled yet. Also fixed the banner's copy, which said "Add
+  availability" — the actual nav button is labeled "Edit availability".
+- **`src/components/EditAvailabilityClient.tsx`**:
+  - Added a back-arrow icon button (SVG chevron, `aria-label="Back"`) to
+    the left of the "Edit availability" heading. It reuses the existing
+    `handleDone` handler, so it triggers the same unsaved-selection
+    warning as every other way of leaving the page.
+  - Removed the small underlined "Done" text link from the header.
+  - Bottom action area is now Save (left, primary emerald, `flex-1`) and
+    Done (right, secondary/outlined, `flex-1`) side by side in one row,
+    instead of Save alone at the bottom and Done isolated at the top.
+
+## Verification
+
+- `tsc --noEmit`, `eslint`, `next build` all clean.
+- Ran a full manual pass on a local dev server against the real Supabase
+  project: signed up a throwaway account (`aishani+uicheck2@hotmail.com`),
+  confirmed the calendar (with day columns + hour labels) now renders on
+  `/` immediately after landing — the account's own real availability
+  data (added since the last session) showed up correctly too — then
+  checked `/add`, confirmed the back arrow + Save/Done row render and
+  behave as expected (back arrow navigates to `/` when there's no
+  unsaved selection), then deleted the throwaway account via the Supabase
+  Dashboard right after.
+- Note: real availability data now exists in Supabase (added by you
+  between sessions) — the M1 "seed real data" to-do from prior notes
+  looks to be underway or done.
+
+## Where things are left
+
+- Changes are made locally, `tsc`/`eslint`/build all clean, but **not
+  committed or pushed yet** — confirm you want these live before
+  deploying.
+
+## Suggested next steps
+
+1. Review the three fixes above (landing screen, Save/Done layout, back
+   arrow) and confirm before committing/pushing to `main`.
+2. Recruit 5–10 regulars directly (text/DM, not a cold post).
+3. M2 launch — once M1 usage feels real, post to the North Hills FB group.

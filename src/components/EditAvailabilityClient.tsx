@@ -103,15 +103,28 @@ export function EditAvailabilityClient({ dates, initialDate, initialRows }: Prop
 
   return (
     <div className="mx-auto flex max-w-md flex-col gap-5 px-4 py-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-neutral-900">Edit availability</h1>
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={handleDone}
-          className="text-sm text-neutral-500 underline hover:text-neutral-700"
+          aria-label="Back"
+          className="-ml-1.5 rounded-md p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800"
         >
-          Done
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="h-5 w-5"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M17 10a.75.75 0 0 1-.75.75H5.56l4.22 4.22a.75.75 0 1 1-1.06 1.06l-5.5-5.5a.75.75 0 0 1 0-1.06l5.5-5.5a.75.75 0 1 1 1.06 1.06L5.56 9.25H16.25A.75.75 0 0 1 17 10Z"
+              clipRule="evenodd"
+            />
+          </svg>
         </button>
+        <h1 className="text-lg font-semibold text-neutral-900">Edit availability</h1>
       </div>
 
       {unsavedWarning && range && (
@@ -245,14 +258,23 @@ export function EditAvailabilityClient({ dates, initialDate, initialRows }: Prop
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 
-      <button
-        type="button"
-        onClick={handleSubmit}
-        disabled={isPending}
-        className="rounded-md bg-emerald-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {isPending ? "Saving…" : "Save"}
-      </button>
+      <div className="flex gap-3">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isPending}
+          className="flex-1 rounded-md bg-emerald-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isPending ? "Saving…" : "Save"}
+        </button>
+        <button
+          type="button"
+          onClick={handleDone}
+          className="flex-1 rounded-md border border-neutral-300 px-4 py-2.5 font-medium text-neutral-700 transition-colors hover:border-neutral-400 hover:bg-neutral-50"
+        >
+          Done
+        </button>
+      </div>
     </div>
   );
 }
